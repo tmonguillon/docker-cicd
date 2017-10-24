@@ -1,0 +1,55 @@
+version: '2'
+
+services:
+
+  registry:
+    image: registry:latest
+    restart: always
+    volumes:
+      - registry_lib:/var/lib/registry
+    networks:
+      - net
+    ports:
+      - "${REGISTRY_PORT}:5000"
+
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    depends_on:
+      - registry
+    restart: always
+    volumes:
+      - gitlab_etc:/etc/gitlab
+      - gitlab_data:/var/opt/gitlab
+    networks:
+      - net
+    ports:
+      - "${GITLAB_SSH}:22"
+      - "${GITLAB_HTTP}:80"
+      - "${GITLAB_SSL}:443"
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    depends_on:
+      - registry
+      - gitlab
+    restart: always
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    networks:
+      - net
+    ports:
+      - "${JENKINS_HTTP}:8080"
+
+volumes:
+  registry_lib:
+    external: false
+  jenkins_home:
+    external: false
+  gitlab_etc:
+    external: false
+  gitlab_data:
+    external: false
+
+networks:
+  net:
+    external: false
